@@ -1,4 +1,7 @@
 import random
+from physics import update_speed
+from global_vars import coroutines
+
 
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
@@ -6,9 +9,9 @@ RIGHT_KEY_CODE = 261
 UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
 
-def rnd():
-    '''Return random int in range 15-25.'''
-    return random.randint(15,25)
+def rnd(x1 = 15,x2 = 25):
+    '''Return random int in range x1-x2.'''
+    return random.randint(x1,x2)
 
 
 def read_controls(canvas):
@@ -41,12 +44,12 @@ def read_controls(canvas):
     
     return rows_direction, columns_direction, space_pressed
 
-def get_ship_postition(canvas,start_row, start_column,frames):
-    """function read keyboard and return space ship coordinates
+def get_ship_control(canvas,start_row, start_column,row_speed, column_speed, frame):
+    """Function read keyboard and return space ship coordinates
     for space ship animation function"""
 
 
-    frame_y, frame_x = get_frame_size(frames[0])
+    frame_y, frame_x = get_frame_size(frame)
     #ship should not intersect window border 
     #increase frame size
     frame_offset = 1
@@ -54,10 +57,12 @@ def get_ship_postition(canvas,start_row, start_column,frames):
     frame_x += frame_offset
     y_max,x_max = canvas.getmaxyx()
         
-    row, column, space = read_controls(canvas) #read keyboard arrows
-    dx = dy = 1 #space ship "velocity"
-    start_row += row*dx 
-    start_column += column*dy 
+    row, column, space = read_controls(canvas) #read keyboard 
+    row_speed, column_speed = update_speed(row_speed,column_speed, row, column)
+
+    start_row += row_speed 
+    start_column += column_speed 
+
     #check field border
     if start_row >= y_max-frame_y:
         start_row = y_max-frame_y
@@ -68,10 +73,11 @@ def get_ship_postition(canvas,start_row, start_column,frames):
     elif start_column < 1:
         start_column = 1
 
-    return start_row, start_column
+    return (start_row, start_column, row_speed, column_speed, space)
 
 def draw_frame(canvas, start_row, start_column, text, negative=False):
     """Draw multiline text fragment on canvas. Erase text instead of drawing if negative=True is specified."""
+    
     
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -109,3 +115,4 @@ def get_frame_size(text):
     rows = len(lines)
     columns = max([len(line) for line in lines])
     return rows, columns
+
