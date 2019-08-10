@@ -23,6 +23,7 @@ from global_vars import spaceship_frame
 from global_vars import obstacles
 from global_vars import obstacles_in_last_collisions
 from global_vars import year
+from global_vars import score
 
 async def blink(canvas, row, column, symbol='*'):
     ''' Async function for symbol blinking. '''
@@ -47,7 +48,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
     global obstacles
     global obstacles_in_last_collisions
-
+    global score
 
     row, column = start_row, start_column
 
@@ -76,6 +77,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         for obs in obstacles:
             if obs.has_collision(round(row), round(column)):
                 obstacles_in_last_collisions.append(obs)
+                score += 25
                 return 
         row += rows_speed
         column += columns_speed
@@ -104,9 +106,11 @@ async def run_spaceship(canvas, start_row, start_column):
     global coroutintes
     global obstacles
     global year
+    
 
     row_speed, column_speed = 0, 0
-
+    score_counter = count_score()
+    coroutines.append(score_counter)
     while True:
         #remembering current frame
         current_frame = spaceship_frame
@@ -118,6 +122,8 @@ async def run_spaceship(canvas, start_row, start_column):
         #add fire if space were pressed
         if space and year >= 2020:
             coroutines.append(fire(canvas,start_row,start_column,-1,0))
+            #coroutines.append(fire(canvas,start_row,start_column,-1,1))
+            #coroutines.append(fire(canvas,start_row,start_column,-1,-1))
 
         draw_frame(canvas, start_row, start_column, current_frame)
         await sleep(1)
@@ -126,6 +132,7 @@ async def run_spaceship(canvas, start_row, start_column):
         for obs in obstacles:
             if obs.has_collision(start_row, start_column,5,4):
                 coroutines.append(show_gameover(canvas))
+                coroutines.remove(score_counter)
                 return 
 
 
@@ -144,47 +151,6 @@ async def animate_spaceship():
         spaceship_frame = frame
         await sleep(2)
 
-   
-'''   
-async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
-    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
-    
-    
-    global obstacles
-    global obstacles_in_last_collisions
-
-
-    rows_number, columns_number = canvas.getmaxyx()
-
-    column = max(column, 0)
-    column = min(column, columns_number - 1)
-
-    row = 0
-
-    frame_rows, frame_columns = get_frame_size(garbage_frame)
-    
-    while row < rows_number:
-
-        draw_frame(canvas, row, column, garbage_frame)
-        obs = Obstacle(row, column,frame_rows, frame_columns)
-
-        obstacles.append(obs)
-        await asyncio.sleep(0)
-        draw_frame(canvas, row, column, garbage_frame, negative=True)
-        #if obstacle in obstacles_in_last_collisions - obstacle removed, coro stops
-        if obs in obstacles_in_last_collisions:
-            obstacles_in_last_collisions.remove(obs)
-            obstacles.remove(obs)
-            await explode(canvas, row, column)
-            return 
-        
-        try:
-            obstacles.remove(obs)
-        except ValueError:
-            pass
-
-        row += speed
-'''
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
@@ -248,8 +214,8 @@ async def fill_orbit_with_garbage(canvas):
         #add random fly garbage coroutine after random sleep
         delay = get_garbage_delay_tics(year)#delay for garbage spawning
         if delay:
-            coroutines.append(fly_garbage(canvas,random.randint(1,x_max),   random.choice(frames)))
-            await sleep(rnd(delay*2,delay*4))
+            coroutines.append(fly_garbage(canvas,random.randint(1,x_max), random.choice(frames)))
+            await sleep(rnd(delay*1,delay*3))
         await sleep()
 
 
@@ -269,6 +235,22 @@ async def count_year():
     while True:
         year += 1
         await sleep(20)
+
+async def count_score():
+    """Score count on lifetime """
+    global score
+
+    while True:
+        score += 1
+        await sleep(20)
+
+async def draw_score(canvas):
+    
+    
+    global score
+    while True:
+        canvas.addstr(1,1,"Score "+str(score))
+        await sleep()
 
 async def draw_year_label(canvas):
     """Year drawing function"""
@@ -302,3 +284,5 @@ async def draw_phrases(canvas):
         except TypeError:
             pass
         await sleep()
+
+

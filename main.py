@@ -12,6 +12,8 @@ from async_funcs import fill_orbit_with_garbage
 from async_funcs import count_year
 from async_funcs import draw_phrases
 from async_funcs import draw_year_label
+from async_funcs import count_score
+from async_funcs import draw_score
 
 from obstacles import show_obstacles
 
@@ -58,6 +60,8 @@ def draw(canvas):
     year_drawing = draw_year_label(canvas)
     labels_control = draw_phrases(canvas)
     garbage_anim = fill_orbit_with_garbage(canvas)
+    #score_counter = count_score()
+    score_drawer = draw_score(canvas)
 
     coroutines.append(space_ship_animate)
     coroutines.append(space_ship_run)
@@ -65,6 +69,8 @@ def draw(canvas):
     coroutines.append(year_drawing)
     coroutines.append(year_control)
     coroutines.append(garbage_anim)
+    #coroutines.append(score_counter)
+    coroutines.append(score_drawer)
     coroutines = add_stars_coros(canvas)
 
     #obstacles debug
